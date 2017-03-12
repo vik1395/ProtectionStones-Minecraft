@@ -5,6 +5,9 @@
  */
 package me.vik1395.ProtectionStones.ObjectOrientated;
 
+import me.vik1395.ProtectionStones.ObjectOrientated.PSProtect;
+import me.vik1395.ProtectionStones.ObjectOrientated.ProtectionStones;
+import me.vik1395.ProtectionStones.ObjectOrientated.ProtectionStones;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -39,11 +42,12 @@ public class PSMessager {
         }
         return true;
     }
-    public String send(CommandSender s, String msg, Boolean global, Player p, String extra){
+    public String send(CommandSender s, String msg, Boolean global, Player p, String arg1, String arg2){
         YamlConfiguration langFile = YamlConfiguration.loadConfiguration(localeFile);
         String message = langFile.getString(msg);
         message = message.replaceAll("%p", p.getName());
-        message = message.replaceAll("%e", extra);
+        if (arg1 != null) { message = message.replaceAll("%a1", arg1); }
+        if (arg2 != null) { message = message.replaceAll("%a2", arg2); }
         
         if (global) {
             instance.getServer().broadcastMessage(message);

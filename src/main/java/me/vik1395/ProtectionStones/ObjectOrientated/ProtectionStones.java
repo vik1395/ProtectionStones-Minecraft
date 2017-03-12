@@ -5,18 +5,18 @@
  */
 package me.vik1395.ProtectionStones.ObjectOrientated;
 
-import java.io.File;
-import java.io.InputStream;
-import static me.vik1395.ProtectionStones.Main.wgd;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import me.vik1395.ProtectionStones.ObjectOrientated.PSCommands;
+import com.sk89q.worldguard.protection.flags.Flag;
+import com.sk89q.worldguard.protection.flags.StateFlag;
+import java.util.ArrayList;
+import java.util.List;
+
 /*
 
-Authors: Vik1395, Dragoboss
+Authors: Dragoboss
 Project: ProtectionStones
 
 Copyright 2015
@@ -30,7 +30,10 @@ You may find an abridged version of the License at http://creativecommons.org/li
  */
 public class ProtectionStones extends JavaPlugin {
     PSMessager msgr = new PSMessager();
+    PSCommands cmds = new PSCommands();
     public static Plugin wgd;
+    List<String> PSAliases = new ArrayList<>();
+    List<String> PRAliases = new ArrayList<>();
     
     public ProtectionStones instance() {
         return this;
@@ -38,12 +41,13 @@ public class ProtectionStones extends JavaPlugin {
     
     @Override
     public void onEnable() {
-        
+        this.getCommand("protectionstones").setExecutor(cmds);
+        this.getCommand("protectionregion").setExecutor(cmds);
         
         if(getServer().getPluginManager().getPlugin("WorldGuard").isEnabled() && getServer().getPluginManager().getPlugin("WorldGuard").isEnabled()) {
             wgd = getServer().getPluginManager().getPlugin("WorldGuard");
         } else {
-            getLogger().info("WorldGuard or WorldEdit not enabled! Disabling ProtectionStones...");
+            getLogger().info("WorldGuard is not enabled! Disabling ProtectionStones...");
             getServer().getPluginManager().disablePlugin(this);
         }
     }
@@ -51,15 +55,17 @@ public class ProtectionStones extends JavaPlugin {
     @Override
     public void onDisable() {
     }
-    
-    @Override
-    public boolean onCommand(CommandSender s, Command cmd, String label, String[] args) {
-        if (s instanceof Player) {
-            Player p = (Player) s;
-        } else {
-            String msg = "NoConsole";
-            msgr.send(s, msg, false, null, "");
+
+    public static Object getFlagValue(Flag<?> flag, Object value) {
+        if (value == null) return null;
+
+        String valueString = value.toString().trim();
+
+        if ((flag instanceof StateFlag)) {
+            if (valueString.equalsIgnoreCase("allow")) return StateFlag.State.ALLOW;
+            if (valueString.equalsIgnoreCase("deny")) return StateFlag.State.DENY;
+            return null;
         }
-        return true;
+        return null;
     }
 }
