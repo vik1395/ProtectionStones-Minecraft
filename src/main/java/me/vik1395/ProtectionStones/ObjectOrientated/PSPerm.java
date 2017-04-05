@@ -8,7 +8,6 @@ package me.vik1395.ProtectionStones.ObjectOrientated;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.permissions.PermissionAttachmentInfo;
-import org.bukkit.permissions.Permission;
 
 /**
  *

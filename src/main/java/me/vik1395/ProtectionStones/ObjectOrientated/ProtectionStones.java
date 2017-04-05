@@ -13,6 +13,8 @@ import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import java.util.ArrayList;
 import java.util.List;
+import org.bukkit.Material;
+import org.bukkit.configuration.file.FileConfiguration;
 
 /*
 
@@ -29,11 +31,13 @@ You may obtain a copy of the License at http://creativecommons.org/licenses/by-s
 You may find an abridged version of the License at http://creativecommons.org/licenses/by-sa/4.0/
  */
 public class ProtectionStones extends JavaPlugin {
+    FileConfiguration cfg;
     PSMessager msgr = new PSMessager();
     PSCommands cmds = new PSCommands();
     public static Plugin wgd;
-    List<String> PSAliases = new ArrayList<>();
-    List<String> PRAliases = new ArrayList<>();
+    List<String> PSAliases, PRAliases = new ArrayList<>();
+    public Boolean useMeta, useUUIDs;
+    public List<?> blocks, flagsAllowed, flagsDefault, deniedWorlds;
     
     public ProtectionStones instance() {
         return this;
@@ -41,6 +45,8 @@ public class ProtectionStones extends JavaPlugin {
     
     @Override
     public void onEnable() {
+        cfg = this.getConfig();
+        getValues(cfg);
         this.getCommand("protectionstones").setExecutor(cmds);
         this.getCommand("protectionregion").setExecutor(cmds);
         
@@ -54,6 +60,8 @@ public class ProtectionStones extends JavaPlugin {
     
     @Override
     public void onDisable() {
+        clearValues(cfg);
+        cfg = null;
     }
 
     public static Object getFlagValue(Flag<?> flag, Object value) {
@@ -67,5 +75,27 @@ public class ProtectionStones extends JavaPlugin {
             return null;
         }
         return null;
+    }
+
+    private void getValues(FileConfiguration cfg) {
+        if (cfg.getCurrentPath().endsWith("config.yml")) {
+            useMeta = cfg.getBoolean("Global.Use MetaData");
+            blocks = cfg.getList("Global.Blocks");
+            flagsAllowed = cfg.getList("Global.Allowed Flags");
+            flagsDefault = cfg.getList("Global.Default Flags");
+            useUUIDs = cfg.getBoolean("Global.Use UUIDs");
+            deniedWorlds = cfg.getList("Global.Worlds Denied");
+        }
+    }
+
+    private void clearValues(FileConfiguration cfg) {
+        if (cfg.getCurrentPath().endsWith("config.yml")) {
+            useMeta = null;
+            blocks = null;
+            flagsAllowed = null;
+            flagsDefault = null;
+            useUUIDs = null;
+            deniedWorlds = null;
+        }
     }
 }
