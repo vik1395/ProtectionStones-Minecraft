@@ -61,26 +61,26 @@
         <url>http://maven.sk89q.com/repo/</url>
     </repository>
   </repositories>
-  
-  <dependencies>
-    <dependency>
-      <groupId>org.spigotmc</groupId>
-      <artifactId>spigot-api</artifactId>
-      <version>1.10-R0.1-SNAPSHOT</version>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-        <groupId>com.sk89q.worldguard</groupId>
-        <artifactId>worldguard-legacy</artifactId>
-        <version>6.1.2-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-        <groupId>com.sk89q.worldedit</groupId>
-        <artifactId>worldedit-bukkit</artifactId>
-        <version>6.1.3-SNAPSHOT</version>
-    </dependency> 
-  </dependencies>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+    
+    <dependencies>
+        <dependency>
+            <!-- Spigot-Bukkit API -->
+            <groupId>org.spigotmc</groupId>
+            <artifactId>spigot</artifactId>
+            <version>1.12-R0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sk89q</groupId>
+            <artifactId>worldguard-legacy</artifactId>
+            <version>6.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sk89q</groupId>
+            <artifactId>worldedit-bukkit</artifactId>
+            <version>6.1.9</version>
+        </dependency>        
+    </dependencies>
 </project>

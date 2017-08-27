@@ -35,30 +35,16 @@ import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import static me.vik1395.ProtectionStones.Main.uuid;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
-import org.bukkit.inventory.MainHand;
 import org.bukkit.metadata.MetadataValue;
-
-/*
-
-Author: Vik1395
-Project: VanishBungee
-
-Copyright 2015
-
-Licensed under Creative CommonsAttribution-ShareAlike 4.0 International Public License (the "License");
-You may not use this file except in compliance with the License.
-
-You may obtain a copy of the License at http://creativecommons.org/licenses/by-sa/4.0/legalcode
-
-You may find an abridged version of the License at http://creativecommons.org/licenses/by-sa/4.0/
- */
 
 public class ListenerClass implements Listener {
     StoneTypeData StoneTypeData = new StoneTypeData();
@@ -432,25 +418,37 @@ public class ListenerClass implements Listener {
                 for (ProtectedRegion r: regions){
                     if (r.getOwners().contains(p.getName())) {
                         ownsAll = true;
+                    } else {
+                        ownsAll = false;
                     }
                 }
                 if (!ownsAll) {
-                    if (p.hasMetadata("psBypass")){
-                        List<MetadataValue> values = p.getMetadata("psBypass");
-                        for (MetadataValue value: values) {
-                            if (value.asBoolean() == true) {
-                                return;
+                    for (Iterator<ProtectedRegion> region = regions.iterator(); region.hasNext();) {
+                        ProtectedRegion selected = region.next();
+                        if (selected.getId().startsWith("ps")) {
+                            if (p.hasMetadata("psBypass")){
+                                List<MetadataValue> values = p.getMetadata("psBypass");
+                                for (MetadataValue value: values) {
+                                    if (value.asBoolean() == true) {
+                                        return;
+                                    } else {
+                                        if (regions.allows(DefaultFlag.PVP)) {
+                                            event.setCancelled(true);
+                                            p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&cTeleportation blocked! &eDestination was a &cPVP &earea and cannot be teleported to."));
+                                        } else {
+                                            if (regions.allows(DefaultFlag.PVP)) {
+                                                event.setCancelled(true);
+                                                p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&cTeleportation blocked! &eDestination was a &cPVP &earea and cannot be teleported to."));
+                                            }                                                  
+                                        }
+                                    }
+                                }
                             } else {
                                 if (regions.allows(DefaultFlag.PVP)) {
                                     event.setCancelled(true);
                                     p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&cTeleportation blocked! &eDestination was a &cPVP &earea and cannot be teleported to."));
                                 }
                             }
-                        }
-                    } else {
-                        if (regions.allows(DefaultFlag.PVP)) {
-                            event.setCancelled(true);
-                            p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&cTeleportation blocked! &eDestination was a &cPVP &earea and cannot be teleported to."));
                         }
                     }
                 }
@@ -467,12 +465,17 @@ public class ListenerClass implements Listener {
             if (!wg.isEnabled()) { return; }
             RegionManager rgm = wg.getRegionManager(event.getFrom().getWorld());
             if (rgm.getApplicableRegions(event.getTo()) != null) {
-                ApplicableRegionSet region = rgm.getApplicableRegions(event.getTo());
-                ApplicableRegionSet regionFrom = rgm.getApplicableRegions(event.getFrom());
-                if (regionFrom != null) {
-                    if (!(regionFrom.allows(DefaultFlag.PVP))) {
-                        if (region.allows(DefaultFlag.PVP)) {
-                            p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&cWarning! &eThis area is a &cPVP &earea! You may &cdie &eand &close stuff&e!"));
+                ApplicableRegionSet regions = rgm.getApplicableRegions(event.getTo());
+                ApplicableRegionSet regionsFrom = rgm.getApplicableRegions(event.getFrom());
+                if (regionsFrom != null) {
+                    for (Iterator<ProtectedRegion> region = regions.iterator(); region.hasNext();) {
+                        ProtectedRegion selected = region.next();
+                        if (selected.getId().startsWith("ps")) {
+                            if (!(regionsFrom.allows(DefaultFlag.PVP))) {
+                                if (regions.allows(DefaultFlag.PVP)) {
+                                    p.sendMessage(ChatColor.translateAlternateColorCodes('&', "&cWarning! &eThis area is a &cPVP &earea! You may &cdie &eand &close stuff&e!"));
+                                }
+                            }
                         }
                     }
                 }
