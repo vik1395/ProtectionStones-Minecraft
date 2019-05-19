@@ -17,6 +17,7 @@
 package me.vik1395.ProtectionStones;
 
 import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
@@ -93,7 +94,7 @@ public enum PSL {
     FLAG_HELP("flag.help", ChatColor.AQUA + "> " + ChatColor.GRAY + "/ps flag [flagname] [value|null]"),
     FLAG_HELP_DESC("flag.help_desc", "Use this command to set a flag in your protected region."),
     FLAG_SET("flag.flag_set", ChatColor.AQUA + "%flag%" + ChatColor.GRAY + " flag has been set."),
-    FLAG_NOT_SET("flag.flag_not_set", ChatColor.AQUA + "%flag%" + ChatColor.GRAY + " flag has " + ChatColor.RED + "not" + ChatColor.GRAY + " been set."),
+    FLAG_NOT_SET("flag.flag_not_set", ChatColor.AQUA + "%flag%" + ChatColor.GRAY + " flag has " + ChatColor.RED + "not" + ChatColor.GRAY + " been set. Check your values again."),
 
     // ps hide/unhide
     VISIBILITY_HIDE_HELP("visibility.hide_help", ChatColor.AQUA + "> " + ChatColor.GRAY + "/ps hide"),
@@ -135,6 +136,7 @@ public enum PSL {
     TP_HELP("tp.help", ChatColor.AQUA + "> " + ChatColor.GRAY + "/ps tp [player] [num]"),
     TP_HELP_DESC("tp.help_desc", "Teleports you to one of a given player's regions."),
     NUMBER_ABOVE_ZERO("tp.number_above_zero", ChatColor.RED + "Please enter a number above 0."),
+    TP_VALID_NUMBER("tp.valid_number", ChatColor.RED + "Please enter a valid number."),
     ONLY_HAS_REGIONS("tp.only_has_regions", ChatColor.RED + "%player% only has %num% protected regions in this world!"),
     TPING("tp.tping", ChatColor.GREEN + "Teleporting..."),
     TP_ERROR_NAME("tp.error_name", ChatColor.RED + "Error in teleporting to protected region! (parsing WG region name error)"),
@@ -154,6 +156,7 @@ public enum PSL {
     // ps view
     VIEW_HELP("view.help", ChatColor.AQUA + "> " + ChatColor.GRAY + "/ps view"),
     VIEW_HELP_DESC("view.help_desc", "Use this command to view the borders of a protected region."),
+    VIEW_COOLDOWN("view.cooldown", ChatColor.RED + "Please wait a while before using /ps view again."),
     VIEW_GENERATING("view.generating", ChatColor.GRAY + "Generating border..."),
     VIEW_GENERATE_DONE("view.generate_done", ChatColor.GREEN + "Done! The border will disappear after 30 seconds!"),
     VIEW_REMOVING("view.removing", ChatColor.AQUA + "Removing border...\n" + ChatColor.GREEN + "If you still see ghost blocks, relog!"),
@@ -217,6 +220,14 @@ public enum PSL {
     public String msg() {
         String msgG = keyToMsg.get(key);
         return ChatColor.translateAlternateColorCodes('&', (msgG == null) ? msg : msgG);
+    }
+
+    // Sends a message to a commandsender if the string is not empty
+
+    public static void msg(CommandSender p, String str) {
+        if (str != null && !str.equals("")) {
+            p.sendMessage(str);
+        }
     }
 
     public static void loadConfig() {

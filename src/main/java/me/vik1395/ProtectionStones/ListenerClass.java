@@ -37,6 +37,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
@@ -59,8 +60,10 @@ public class ListenerClass implements Listener {
         ProtectionStones.nameToUUID.put(e.getPlayer().getName(), e.getPlayer().getUniqueId());
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGH)
     public void onBlockPlace(BlockPlaceEvent e) {
+        if (e.isCancelled()) return;
+
         Player p = e.getPlayer();
         Block b = e.getBlock();
 
@@ -78,13 +81,19 @@ public class ListenerClass implements Listener {
 
         // check if the item was created by protection stones (stored in custom tag)
         // block must have restrictObtaining enabled for blocking place
-        CustomItemTagContainer tagContainer = e.getItemInHand().getItemMeta().getCustomTagContainer();
-        String tag = tagContainer.getCustomTag(new NamespacedKey(ProtectionStones.plugin, "isPSBlock"), ItemTagType.STRING);
+        String tag = null;
+        try {
+            if (e.getItemInHand().getItemMeta() != null) {
+                CustomItemTagContainer tagContainer = e.getItemInHand().getItemMeta().getCustomTagContainer();
+                tag = tagContainer.getCustomTag(new NamespacedKey(ProtectionStones.plugin, "isPSBlock"), ItemTagType.STRING);
+            }
+        } catch (IllegalArgumentException ignored) {
+        } // ignore item tags that aren't of "string" type
         if (blockOptions.restrictObtaining && (tag == null || !tag.equalsIgnoreCase("true"))) return;
 
         // check permission
         if (!p.hasPermission("protectionstones.create") || (!blockOptions.permission.equals("") && !p.hasPermission(blockOptions.permission))) {
-            p.sendMessage(PSL.NO_PERMISSION_CREATE.msg());
+            PSL.msg(p, PSL.NO_PERMISSION_CREATE.msg());
             e.setCancelled(true);
             return;
         }
@@ -97,7 +106,7 @@ public class ListenerClass implements Listener {
 
         // check if player can place block in that area
         if (!wg.createProtectionQuery().testBlockPlace(p, b.getLocation(), b.getType())) {
-            p.sendMessage(PSL.CANT_PROTECT_THAT.msg());
+            PSL.msg(p, PSL.CANT_PROTECT_THAT.msg());
             e.setCancelled(true);
             return;
         }
@@ -109,9 +118,9 @@ public class ListenerClass implements Listener {
                 double cooldown = ProtectionStones.configOptions.placingCooldown; // seconds
                 double lastPlace = lastProtectStonePlaced.get(p); // milliseconds
 
-                if (lastPlace + cooldown*1000 > currentTime) { // if cooldown has not been finished
+                if (lastPlace + cooldown * 1000 > currentTime) { // if cooldown has not been finished
                     e.setCancelled(true);
-                    p.sendMessage(PSL.COOLDOWN.msg().replace("%time%", String.format("%.1f", cooldown - ((currentTime - lastPlace) / 1000))));
+                    PSL.msg(p, PSL.COOLDOWN.msg().replace("%time%", String.format("%.1f", cooldown - ((currentTime - lastPlace) / 1000))));
                     return;
                 }
 
@@ -142,7 +151,7 @@ public class ListenerClass implements Listener {
             // check if player has passed region limit
             if (rm.getRegionCountOfPlayer(lp) >= max) {
                 if (max != 0) {
-                    p.sendMessage(PSL.REACHED_REGION_LIMIT.msg());
+                    PSL.msg(p, PSL.REACHED_REGION_LIMIT.msg());
                     e.setCancelled(true);
                     return;
                 }
@@ -151,7 +160,7 @@ public class ListenerClass implements Listener {
             if (blockOptions.worldListType.equalsIgnoreCase("blacklist")) {
                 for (String world : blockOptions.worlds) {
                     if (world.trim().equals(p.getLocation().getWorld().getName())) {
-                        p.sendMessage(PSL.WORLD_DENIED_CREATE.msg());
+                        PSL.msg(p, PSL.WORLD_DENIED_CREATE.msg());
                         e.setCancelled(true);
                         return;
                     }
@@ -164,7 +173,7 @@ public class ListenerClass implements Listener {
                     }
                 }
                 if (!found) {
-                    p.sendMessage(PSL.WORLD_DENIED_CREATE.msg());
+                    PSL.msg(p, PSL.WORLD_DENIED_CREATE.msg());
                     e.setCancelled(true);
                     return;
                 }
@@ -188,7 +197,7 @@ public class ListenerClass implements Listener {
 
         BlockVector3 min = v1;
         BlockVector3 max = v2;
-        String id = "ps" + (int) bx + "x" + (int) by + "y" + (int) bz + "z";
+        String id = "ps" + (long) bx + "x" + (long) by + "y" + (long) bz + "z";
 
         ProtectedRegion region = new ProtectedCuboidRegion(id, min, max);
         region.getOwners().addPlayer(p.getUniqueId());
@@ -214,7 +223,7 @@ public class ListenerClass implements Listener {
                 } catch (StorageException e1) {
                     e1.printStackTrace();
                 }
-                p.sendMessage(PSL.REGION_OVERLAP.msg());
+                PSL.msg(p, PSL.REGION_OVERLAP.msg());
                 e.setCancelled(true);
                 return;
             }
@@ -255,8 +264,10 @@ public class ListenerClass implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGH)
     public void onBlockBreak(BlockBreakEvent e) {
+        if (e.isCancelled()) return;
+
         Player p = e.getPlayer();
         Block pb = e.getBlock();
 
@@ -271,16 +282,7 @@ public class ListenerClass implements Listener {
         RegionContainer regionContainer = WorldGuard.getInstance().getPlatform().getRegionContainer();
         RegionManager rgm = regionContainer.get(BukkitAdapter.adapt(p.getWorld()));
 
-        // check if player can actually break block
-        if (!wg.createProtectionQuery().testBlockBreak(p, pb)) {
-            e.setCancelled(true);
-            return;
-        }
-
-        String psx = Double.toString(pb.getLocation().getX());
-        String psy = Double.toString(pb.getLocation().getY());
-        String psz = Double.toString(pb.getLocation().getZ());
-        String id = "ps" + psx.substring(0, psx.indexOf(".")) + "x" + psy.substring(0, psy.indexOf(".")) + "y" + psz.substring(0, psz.indexOf(".")) + "z";
+        String id = "ps" + (long) pb.getLocation().getX() + "x" + (long) pb.getLocation().getY() + "y" + (long) pb.getLocation().getZ() + "z";
 
         // check if that is actually a protection stone block (owns a region)
         if (rgm.getRegion(id) == null) {
@@ -300,14 +302,14 @@ public class ListenerClass implements Listener {
 
         // check for destroy permission
         if (!p.hasPermission("protectionstones.destroy")) {
+            PSL.msg(p, PSL.NO_PERMISSION_DESTROY.msg());
             e.setCancelled(true);
-            p.sendMessage(PSL.NO_PERMISSION_DESTROY.msg());
             return;
         }
 
         // check if player is owner of region
         if (!rgm.getRegion(id).isOwner(wg.wrapPlayer(p)) && !p.hasPermission("protectionstones.superowner")) {
-            p.sendMessage(PSL.NO_REGION_PERMISSION.msg());
+            PSL.msg(p, PSL.NO_REGION_PERMISSION.msg());
             e.setCancelled(true);
             return;
         }
@@ -316,7 +318,7 @@ public class ListenerClass implements Listener {
         if (!blockOptions.noDrop) {
             if (!p.getInventory().addItem(ProtectionStones.createProtectBlockItem(blockOptions)).isEmpty()) {
                 // method will return not empty if item couldn't be added
-                p.sendMessage(PSL.NO_ROOM_IN_INVENTORY.msg());
+                PSL.msg(p, PSL.NO_ROOM_IN_INVENTORY.msg());
                 e.setCancelled(true);
                 return;
             }
@@ -331,7 +333,7 @@ public class ListenerClass implements Listener {
         } catch (Exception e1) {
             ProtectionStones.getPlugin().getLogger().severe("WorldGuard Error [" + e1 + "] during Region File Save");
         }
-        p.sendMessage(PSL.NO_LONGER_PROTECTED.msg());
+        PSL.msg(p, PSL.NO_LONGER_PROTECTED.msg());
 
         e.setDropItems(false);
         e.setExpToDrop(0);
@@ -344,6 +346,36 @@ public class ListenerClass implements Listener {
             ConfigProtectBlock cpb = ProtectionStones.getBlockOptions(b.getType().toString());
             if (cpb != null && rgm.getRegion("ps" + b.getX() + "x" + b.getY() + "y" + b.getZ() + "z") != null && cpb.preventPistonPush) {
                 e.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void onEntityExplode(EntityExplodeEvent e) {
+        RegionContainer regionContainer = WorldGuard.getInstance().getPlatform().getRegionContainer();
+        RegionManager rgm = regionContainer.get(BukkitAdapter.adapt(e.getEntity().getWorld()));
+
+        // loop through exploded blocks
+        for (int i = 0; i < e.blockList().size(); i++) {
+            Block b = e.blockList().get(i);
+
+            if (ProtectionStones.isProtectBlock(b.getType().toString())) {
+                String id = "ps" + b.getX() + "x" + b.getY() + "y" + b.getZ() + "z";
+                if (rgm.getRegion(id) != null) {
+                    if (ProtectionStones.getBlockOptions(b.getType().toString()).preventExplode) {
+                        // remove block from exploded list if prevent_explode is enabled
+                        e.blockList().remove(i);
+                        i--;
+                    } else if (ProtectionStones.getBlockOptions(b.getType().toString()).destroyRegionWhenExplode) {
+                        // remove region from worldguard if destroy_region_when_explode is enabled
+                        rgm.removeRegion(id);
+                        try {
+                            rgm.save();
+                        } catch (StorageException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                }
             }
         }
     }
@@ -374,12 +406,13 @@ public class ListenerClass implements Listener {
         boolean foundNoTeleport = false;
         for (ProtectedRegion r : regions) {
             String f = r.getFlag(FlagHandler.PS_BLOCK_MATERIAL);
-            if (f != null && ProtectionStones.getBlockOptions(f).preventTeleportIn) foundNoTeleport = true;
+            if (f != null && ProtectionStones.getBlockOptions(f) != null && ProtectionStones.getBlockOptions(f).preventTeleportIn)
+                foundNoTeleport = true;
             if (r.getOwners().contains(wg.wrapPlayer(event.getPlayer()))) return;
         }
 
         if (foundNoTeleport) {
-            event.getPlayer().sendMessage(PSL.REGION_CANT_TELEPORT.msg());
+            PSL.msg(event.getPlayer(), PSL.REGION_CANT_TELEPORT.msg());
             event.setCancelled(true);
         }
     }

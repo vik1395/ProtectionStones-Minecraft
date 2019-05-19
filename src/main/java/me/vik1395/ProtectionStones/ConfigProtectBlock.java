@@ -27,10 +27,11 @@ import java.util.List;
 public class ConfigProtectBlock {
 
     /*
-     * Object to represent a protection block as defined in config ("Blocks" section)
+     * Object to represent a protection block as defined in config (blocks folder)
      */
 
     // Annotations are for types that have names that aren't the same as the config name
+    // Check here for help: https://github.com/TheElectronWill/Night-Config
 
     // main section
     public String type, alias;
@@ -83,6 +84,10 @@ public class ConfigProtectBlock {
     public boolean noDrop;
     @Path("behaviour.prevent_piston_push")
     public boolean preventPistonPush;
+    @Path("behaviour.prevent_explode")
+    public boolean preventExplode;
+    @Path("behaviour.destroy_region_when_explode")
+    public boolean destroyRegionWhenExplode;
     @Path("behaviour.prevent_silk_touch")
     public boolean preventSilkTouch;
 

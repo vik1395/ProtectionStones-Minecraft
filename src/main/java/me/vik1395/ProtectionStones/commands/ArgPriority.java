@@ -31,16 +31,16 @@ public class ArgPriority {
         RegionManager rgm = ProtectionStones.getRegionManagerWithPlayer(p);
 
         if (!p.hasPermission("protectionstones.priority")) {
-            p.sendMessage(PSL.NO_PERMISSION_PRIORITY.msg());
+            PSL.msg(p, PSL.NO_PERMISSION_PRIORITY.msg());
             return true;
         }
         if (ProtectionStones.hasNoAccess(rgm.getRegion(psID), p, wg.wrapPlayer(p), false)) {
-            p.sendMessage(PSL.NO_ACCESS.msg());
+            PSL.msg(p, PSL.NO_ACCESS.msg());
             return true;
         }
         if (args.length < 2) {
             int priority = rgm.getRegion(psID).getPriority();
-            p.sendMessage(PSL.PRIORITY_INFO.msg().replace("%priority%", "" + priority));
+            PSL.msg(p, PSL.PRIORITY_INFO.msg().replace("%priority%", "" + priority));
             return true;
         }
 
@@ -52,9 +52,9 @@ public class ArgPriority {
             } catch (Exception e) {
                 Bukkit.getLogger().severe("[ProtectionStones] WorldGuard Error [" + e + "] during Region File Save");
             }
-            p.sendMessage(PSL.PRIORITY_SET.msg());
+            PSL.msg(p, PSL.PRIORITY_SET.msg());
         } catch (Exception e) {
-            p.sendMessage(PSL.PRIORITY_ERROR.msg());
+            PSL.msg(p, PSL.PRIORITY_ERROR.msg());
         }
         return true;
     }

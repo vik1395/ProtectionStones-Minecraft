@@ -39,7 +39,8 @@ worlds = [
     flags = [
         "pvp deny",
         "greeting &lEntering &b&l%player%'s &r&lprotected area",
-        "farewell &lLeaving &b&l%player%'s &r&lprotected area"
+        "farewell &lLeaving &b&l%player%'s &r&lprotected area",
+        "creeper-explosion deny",
     ]
 
     # List all the flags that can be set by region owners. Separate them with a comma, no space.
@@ -49,6 +50,7 @@ worlds = [
         "greeting",
         "farewell",
         "mob-spawning",
+        "creeper-explosion",
     ]
 
     # Default priority type for this block type protection stone
@@ -62,7 +64,7 @@ worlds = [
     # Lore given to protection block when obtained with /ps give or /ps get
     # Leave as [] for no lore
     lore = [
-        "&6(⌐■_■)ノ♪ Nobody's going to touch my stuff!"
+        "&6(⌐■_■)ノ♪ Nobody's going to touch my stuff!",
     ]
 
     # Add price when using /ps get
@@ -79,6 +81,14 @@ worlds = [
     # Prevents piston pushing of the block. Recommended to keep as true.
     prevent_piston_push = true
 
+    # Prevents the block from being destroyed when exploded.
+    # Recommended to keep true to prevent players from exploiting more protection stones with /ps unhide (when the block is destroyed)
+    prevent_explode = true
+
+    # Destroys the protection stone region when block is exploded. Can be useful for PVP/Factions servers.
+    # prevent_explode must be false for this to work.
+    destroy_region_when_explode = false
+
     # Silk Touch: if true, ore-blocks that are also configured by ProtectionStones will disallow Silk Touch drops
     # This was the old behaviour to prevent natural obtaining of the protection stone.
     # Recommended to keep false if "Restrict Obtaining" (the new way) is true
@@ -86,6 +96,7 @@ worlds = [
 
 [player]
     # Whether or not to prevent teleporting into a protected region if the player doesn't own it (except with ender pearl and chorus fruit)
+    # Does not prevent entry, use the flag "entry deny" for preventing entry.
     # Bypass with protectionstones.tp.bypasstp
     prevent_teleport_in = false
 

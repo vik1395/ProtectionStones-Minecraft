@@ -29,8 +29,12 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class ArgView {
+
+    private static List<UUID> cooldown = new ArrayList<>();
+
     public static boolean argumentView(Player p, String[] args) {
         String psID = ProtectionStones.playerToPSID(p);
 
@@ -38,14 +42,23 @@ public class ArgView {
         RegionManager rgm = ProtectionStones.getRegionManagerWithPlayer(p);
 
         if (!p.hasPermission("protectionstones.view")) {
-            p.sendMessage(PSL.NO_PERMISSION_VIEW.msg());
+            PSL.msg(p, PSL.NO_PERMISSION_VIEW.msg());
             return true;
         }
         if (ProtectionStones.hasNoAccess(rgm.getRegion(psID), p, wg.wrapPlayer(p), true)) {
-            p.sendMessage(PSL.NO_ACCESS.msg());
+            PSL.msg(p, PSL.NO_ACCESS.msg());
             return true;
         }
-        p.sendMessage(PSL.VIEW_GENERATING.msg());
+        if (cooldown.contains(p.getUniqueId())) {
+            PSL.msg(p, PSL.VIEW_COOLDOWN.msg());
+            return true;
+        }
+
+        PSL.msg(p, PSL.VIEW_GENERATING.msg());
+
+        // add player to cooldown
+        cooldown.add(p.getUniqueId());
+        Bukkit.getScheduler().runTaskLaterAsynchronously(ProtectionStones.getPlugin(), () -> cooldown.remove(p.getUniqueId()), 20 * ProtectionStones.configOptions.psViewCooldown);
 
         BlockVector3 minVector = rgm.getRegion(psID).getMinimumPoint();
         BlockVector3 maxVector = rgm.getRegion(psID).getMaximumPoint();
@@ -104,12 +117,12 @@ public class ArgView {
                 }
             }
 
-            Bukkit.getScheduler().runTaskLater(ProtectionStones.getPlugin(), () -> p.sendMessage(PSL.VIEW_GENERATE_DONE.msg()), wait);
+            Bukkit.getScheduler().runTaskLater(ProtectionStones.getPlugin(), () -> PSL.msg(p, PSL.VIEW_GENERATE_DONE.msg()), wait);
 
             Bukkit.getScheduler().runTaskLater(ProtectionStones.getPlugin(), () -> {
-                p.sendMessage(PSL.VIEW_REMOVING.msg());
+                PSL.msg(p, PSL.VIEW_REMOVING.msg());
                 for (Block b : blocks) {
-                    if (b.getWorld().isChunkLoaded(b.getLocation().getBlockX()/16, b.getLocation().getBlockZ()/16)) {
+                    if (b.getWorld().isChunkLoaded(b.getLocation().getBlockX() / 16, b.getLocation().getBlockZ() / 16)) {
                         p.sendBlockChange(b.getLocation(), b.getBlockData());
                         try {
                             Thread.sleep(20);
@@ -125,7 +138,7 @@ public class ArgView {
 
     private static void handleFakeBlock(Player p, int x, int y, int z, BlockData tempBlock, List<Block> restore, long delay, long multiplier) {
         Bukkit.getScheduler().runTaskLater(ProtectionStones.getPlugin(), () -> {
-            if (p.getWorld().isChunkLoaded(x/16, z/16)) {
+            if (p.getWorld().isChunkLoaded(x / 16, z / 16)) {
                 restore.add(p.getWorld().getBlockAt(x, y, z));
                 p.sendBlockChange(p.getWorld().getBlockAt(x, y, z).getLocation(), tempBlock);
             }
