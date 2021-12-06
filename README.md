@@ -1,3 +1,7 @@
+(This should only be used as a base/startng point for 1.12 servers, this has some bugs and is considered dead.
+The updated plugin can be found here for 1.13+)
+https://www.spigotmc.org/resources/protectionstones-updated-for-1-17.61797/
+
 ProtectionStones is a grief prevention and land claiming plugin.
 
 This plugin uses a specified type of minecraft block/blocks as a protection block. When a player placed a block of that type, they are able to protect a region around them. The size of the protected region is configurable in the plugins config file. You can also set which flags players can change and also the default flags to be set when a new region is created.
